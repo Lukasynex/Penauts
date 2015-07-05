@@ -1,10 +1,16 @@
 package testo.pl.penauts;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -191,6 +197,14 @@ public class FacebookDefaultActivity extends ActionBarActivity {
         // Can we present the share dialog for photos?
         canPresentShareDialogWithPhotos = ShareDialog.canShow(
                 SharePhotoContent.class);
+//        ConnectionDetector cd = new ConnectionDetector(getApplicationContext());
+        // Check if Internet present
+        Log.d(TAG,"onCreate()");
+        if (!new ConnectionDetector(this).isConnectingToInternet()) {
+            Log.i(TAG,"no internet connection");
+            // Internet Connection is not present
+            buildNoInternetDialog(this).show();
+        }
     }
 
     @Override
@@ -198,6 +212,27 @@ public class FacebookDefaultActivity extends ActionBarActivity {
         super.onResume();
         // Logs 'install' and 'app activate' App Events.
         AppEventsLogger.activateApp(this);
+    }
+
+
+    public AlertDialog.Builder buildNoInternetDialog(Context c) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(c);
+        builder.setTitle("No Internet connection.");
+        builder.setMessage("You have no internet connection");
+
+        builder.setPositiveButton("Launch internet", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                dialog.dismiss();
+                Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+                startActivity(intent);
+            }
+        });
+
+        return builder;
     }
 
     @Override
@@ -342,9 +377,8 @@ public class FacebookDefaultActivity extends ActionBarActivity {
         }
     }
 
-    private void postPhotoResult(Bitmap bmp) {
+    private void postPhotoResult(Bitmap image) {
         Log.d(TAG, "postPhotoResult()");
-        Bitmap image = bmp;//BitmapFactory.decodeResource(this.getResources(), R.drawable.icon);
         SharePhoto sharePhoto = new SharePhoto.Builder().setBitmap(image).build();
         ArrayList<SharePhoto> photos = new ArrayList<>();
         photos.add(sharePhoto);
